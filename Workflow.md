@@ -122,6 +122,38 @@ npm run dev:start
 
 Компилирует и запускает приложение с форматированным выводом логов через `pino-pretty`.
 
+### База данных (MongoDB)
+
+#### Запустить MongoDB через Docker
+
+Перед первым запуском убедитесь, что Docker Desktop запущен.
+
+```bash
+docker compose up -d
+```
+
+Запускает два контейнера:
+- **MongoDB** на порту `27017` (база данных)
+- **Mongo Express** на порту `8081` (веб-интерфейс для управления БД)
+
+**Учетные данные:**
+- **MongoDB:** username `admin`, password `test`
+- **Mongo Express UI:** username `admin`, password `test`
+
+**Mongo Express:** Откройте в браузере `http://localhost:8081`
+
+#### Остановить MongoDB контейнеры
+
+```bash
+docker compose down
+```
+
+#### Проверить статус контейнеров
+
+```bash
+docker ps
+```
+
 #### Запустить проект
 
 ```bash
