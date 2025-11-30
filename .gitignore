@@ -9,3 +9,9 @@
 .DS_Store
 coverage
 *.log
+
+dist/
+
+# Generated test data (keep only mock templates)
+/mocks/generated*.tsv
+/mocks/test*.tsv

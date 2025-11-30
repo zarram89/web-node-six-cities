@@ -1,0 +1,76 @@
+{
+    "titles": [
+        "Perfectly located Castro",
+        "Beautiful & luxurious apartment at great location",
+        "Wood and stone place",
+        "Canal View Prinsengracht",
+        "Nice, cozy, warm big bed apartment",
+        "White castle",
+        "Loft Studio in the Central Area",
+        "Peaceful studio in the most wanted area in town"
+    ],
+    "descriptions": [
+        "A quiet cozy and comfortable room in the center of the city. Highly recommended for tourists and business travelers.",
+        "Peaceful studio in the most wanted area in town. Quiet house Near of everything. Completely renovated. Lovely neighbourhood, lot of trendy shops, restaurants and bars in a walking distance.",
+        "I rent out a very sunny and bright apartment only 7 minutes walking distance to the metro station. The apartment has a spacious living room with a kitchen, one bedroom and a bathroom with mit bath. A terrace can be used in summer.",
+        "Discover daily local life in city center, friendly neighborhood, clandestine casino, karaoke, old-style artisans, art gallery and artist studio downstairs.",
+        "This is a place for dreamers to reset, reflect, and create. Designed with a 'slow' pace in mind, our hope is that you enjoy every part of your stay; from making local coffee by drip in the morning, choosing the perfect record to put on as the sun sets."
+    ],
+    "cities": [
+        "Paris",
+        "Cologne",
+        "Brussels",
+        "Amsterdam",
+        "Hamburg",
+        "Dusseldorf"
+    ],
+    "previewImages": [
+        "https://14.design.htmlacademy.pro/static/hotel/1.jpg",
+        "https://14.design.htmlacademy.pro/static/hotel/2.jpg",
+        "https://14.design.htmlacademy.pro/static/hotel/3.jpg",
+        "https://14.design.htmlacademy.pro/static/hotel/4.jpg",
+        "https://14.design.htmlacademy.pro/static/hotel/5.jpg"
+    ],
+    "photos": [
+        "https://14.design.htmlacademy.pro/static/hotel/1.jpg",
+        "https://14.design.htmlacademy.pro/static/hotel/2.jpg",
+        "https://14.design.htmlacademy.pro/static/hotel/3.jpg",
+        "https://14.design.htmlacademy.pro/static/hotel/4.jpg",
+        "https://14.design.htmlacademy.pro/static/hotel/5.jpg",
+        "https://14.design.htmlacademy.pro/static/hotel/6.jpg",
+        "https://14.design.htmlacademy.pro/static/hotel/7.jpg",
+        "https://14.design.htmlacademy.pro/static/hotel/8.jpg"
+    ],
+    "amenities": [
+        "Breakfast",
+        "Air conditioning",
+        "Laptop friendly workspace",
+        "Baby seat",
+        "Washer",
+        "Towels",
+        "Fridge"
+    ],
+    "users": [
+        "Ivan",
+        "Petr",
+        "Maria",
+        "Anna",
+        "Dmitry",
+        "Elena"
+    ],
+    "emails": [
+        "ivan@example.com",
+        "petr@example.com",
+        "maria@example.com",
+        "anna@example.com",
+        "dmitry@example.com",
+        "elena@example.com"
+    ],
+    "avatars": [
+        "https://14.design.htmlacademy.pro/static/avatar/1.jpg",
+        "https://14.design.htmlacademy.pro/static/avatar/2.jpg",
+        "https://14.design.htmlacademy.pro/static/avatar/3.jpg",
+        "https://14.design.htmlacademy.pro/static/avatar/4.jpg",
+        "https://14.design.htmlacademy.pro/static/avatar/5.jpg"
+    ]
+}
