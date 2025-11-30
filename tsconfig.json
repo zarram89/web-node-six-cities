@@ -17,9 +17,9 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "emitDecoratorMetadata": true,
     "types": [
       "node",
     ],
