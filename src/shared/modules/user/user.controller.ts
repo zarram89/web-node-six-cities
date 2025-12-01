@@ -13,6 +13,8 @@ import { UserRdo } from './rdo/user.rdo.js';
 import { fillDTO } from '../../helpers/common.js';
 import { HttpError } from '../../libs/rest/exception-filter/http-error.js';
 import { StatusCodes } from 'http-status-codes';
+import { ValidateDtoMiddleware } from '../../libs/rest/middleware/validate-dto.middleware.js';
+import { ValidateObjectIdMiddleware } from '../../libs/rest/middleware/validate-objectid.middleware.js';
 
 @injectable()
 export class UserController extends BaseController {
@@ -24,10 +26,25 @@ export class UserController extends BaseController {
     super(logger);
     this.logger.info('Register routes for UserController...');
 
-    this.addRoute({ path: '/register', method: HttpMethod.Post, handler: this.create });
-    this.addRoute({ path: '/login', method: HttpMethod.Post, handler: this.login });
+    this.addRoute({
+      path: '/register',
+      method: HttpMethod.Post,
+      handler: this.create,
+      middlewares: [new ValidateDtoMiddleware(CreateUserDto)]
+    });
+    this.addRoute({
+      path: '/login',
+      method: HttpMethod.Post,
+      handler: this.login,
+      middlewares: [new ValidateDtoMiddleware(LoginUserDto)]
+    });
     this.addRoute({ path: '/login', method: HttpMethod.Get, handler: this.checkStatus });
-    this.addRoute({ path: '/:userId/avatar', method: HttpMethod.Post, handler: this.uploadAvatar });
+    this.addRoute({
+      path: '/:userId/avatar',
+      method: HttpMethod.Post,
+      handler: this.uploadAvatar,
+      middlewares: [new ValidateObjectIdMiddleware('userId')]
+    });
   }
 
   public async create(
