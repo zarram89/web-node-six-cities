@@ -36,4 +36,18 @@ export class DefaultUserService implements UserService {
 
     return this.create(dto, salt);
   }
+
+  public async findById(userId: string): Promise<DocumentType<UserEntity> | null> {
+    return this.userModel.findById(userId).exec();
+  }
+
+  public async updateById(userId: string, dto: Partial<CreateUserDto>): Promise<DocumentType<UserEntity> | null> {
+    return this.userModel
+      .findByIdAndUpdate(userId, dto, { new: true })
+      .exec();
+  }
+
+  public async exists(userId: string): Promise<boolean> {
+    return (await this.userModel.exists({ _id: userId })) !== null;
+  }
 }

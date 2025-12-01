@@ -779,6 +779,242 @@ DTO (Data Transfer Objects):
 
 ---
 
+## Модуль 5. Задание 2 (module5-task2): Сервисы для работы с базой данных
+
+### Описание задания
+
+В этом задании мы завершим разработку сервисов для работы с базой данных. Чтобы подступиться к этой задаче необходимо проанализировать техническое задание. Особенно раздел «Сценарии». В этом разделе приведён полный список сценариев, которые необходимо реализовать в приложении. Каждый сценарий содержит информацию о данных, которые требуется возвращать клиенту. На основании этой информации можно спланировать недостающие модели данных, а также сервисы для взаимодействия с ними.
+
+**Требования:**
+
+1. Проанализируйте раздел «Сценарии» в техническом задании к вашему проекту. Составьте список недостающих моделей и список сервисов.
+
+2. Опишите все необходимые сущности (Entity) и сервисы (Services). Методы сервисов, ответственные за добавление и обновление документов должны опираться на DTO, поэтому не забудьте создать все необходимые DTO.
+
+3. После имплементации моделей и сервисов обратите внимание на поля, значения которых должны рассчитываться автоматически. Например, «Количество комментариев» для основной сущности (объявление). Выберите наиболее подходящий способ решения и имплементируйте его в соответствующем сервисе.
+
+4. Во всех проектах предусмотрен расчёт рейтинга. Рейтинг рассчитывается автоматически на основании оценок пользователей (средний бал). Реализуйте расчёт рейтинга. Помните, что рейтинг пересчитывается при получении новой оценки от пользователя.
+
+### Решение
+
+#### 1. Анализ сценариев и планирование
+
+**Анализ сценариев из ТЗ:**
+- 2.1-2.3: CRUD операции с предложениями → UserService, OfferService
+- 2.4-2.5: Получение списка и детальной информации → OfferService (find, findById)
+- 2.6-2.7: Комментарии → **CommentService** (новый!)
+- 2.8-2.11: Операции с пользователями → UserService (расширить)
+- 2.12: Премиум предложения → OfferService (findPremiumByCity)
+- 2.13-2.14: Избранное → OfferService (findFavorites, addToFavorites, removeFromFavorites)
+
+**Недостающие компоненты:**
+- ✅ UserEntity - уже создан
+- ✅ OfferEntity - уже создан
+- ❌ **CommentEntity** - нужно создать
+- ❌ **CommentService** - нужно создать
+- ❌ **UpdateOfferDto** - нужно создать
+
+#### 2. Создание Comment Module
+
+**Файлы:**
+```
+src/shared/modules/comment/
+├── comment.entity.ts           # Сущность Comment с Mongoose
+├── create-comment.dto.ts       # DTO для создания комментария
+├── comment-service.interface.ts # Интерфейс сервиса
+└── default-comment.service.ts  # Реализация сервиса
+```
+
+**CommentEntity:**
+```typescript
+@modelOptions({
+  schemaOptions: {
+    collection: 'comments',
+    timestamps: true,
+  }
+})
+export class CommentEntity extends defaultClasses.TimeStamps {
+  @prop({ trim: true, required: true, minlength: 5, maxlength: 1024 })
+  public text!: string;
+
+  @prop({ required: true, min: 1, max: 5 })
+  public rating!: number;
+
+  @prop({ required: true })
+  public postDate!: Date;
+
+  @prop({ ref: UserEntity, required: true })
+  public authorId!: Ref<UserEntity>;
+
+  @prop({ ref: OfferEntity, required: true })
+  public offerId!: Ref<OfferEntity>;
+}
+```
+
+**Методы CommentService:**
+- `create(dto)` - создание комментария + автообновление счетчика и рейтинга
+- `findByOfferId(offerId, limit)` - получение комментариев (макс. 50, сортировка по дате)
+
+#### 3. Расширение OfferService
+
+**Добавлены 10 новых методов:**
+
+| Метод | Назначение |
+|-------|------------|
+| `findById(offerId)` | Детальная информация о предложении |
+| `updateById(offerId, dto)` | Редактирование предложения |
+| `deleteById(offerId)` | Удаление предложения |
+| `findPremiumByCity(city, limit=3)` | Премиум предложения для города |
+| `findFavorites(userId)` | Избранные предложения пользователя |
+| `addToFavorites(offerId, userId)` | Добавить в избранное ($addToSet) |
+| `removeFromFavorites(offerId, userId)` | Удалить из избранного ($pull) |
+| `incCommentCount(offerId)` | Увеличить счетчик комментариев ($inc) |
+| `updateRating(offerId)` | Пересчитать рейтинг (агрегация) |
+| `exists(offerId)` | Проверка существования |
+
+**Добавлено поле в OfferEntity:**
+```typescript
+@prop({ type: () => [String], default: [] })
+public favorites!: string[];  // Массив ID пользователей
+```
+
+**UpdateOfferDto:**
+Partial DTO с опциональными полями для обновления предложения.
+
+#### 4. Расширение UserService
+
+**Добавлены 3 новых метода:**
+- `findById(userId)` - поиск пользователя по ID
+- `updateById(userId, dto)` - обновление данных пользователя
+- `exists(userId)` - проверка существования пользователя
+
+#### 5. Автоматические вычисления
+
+**Стратегия #1: Счетчик комментариев (commentCount)**
+
+**Подход:** Прямое обновление через `$inc` при создании комментария
+
+```typescript
+// В DefaultCommentService.create()
+await this.offerService.incCommentCount(dto.offerId);
+```
+
+```typescript
+// В DefaultOfferService.incCommentCount()
+public async incCommentCount(offerId: string): Promise<void> {
+  await this.offerModel
+    .findByIdAndUpdate(offerId, { $inc: { commentCount: 1 } })
+    .exec();
+}
+```
+
+**Преимущества:**
+- ✅ Простая реализация
+- ✅ Быстрое обновление
+- ✅ Атомарная операция MongoDB
+
+**Стратегия #2: Рейтинг предложения (rating)**
+
+**Подход:** MongoDB агрегация для расчета среднего при каждом новом комментарии
+
+```typescript
+public async updateRating(offerId: string): Promise<void> {
+  const result = await CommentModel.aggregate([
+    { $match: { offerId: new Types.ObjectId(offerId) } },
+    {
+      $group: {
+        _id: null,
+        avgRating: { $avg: '$rating' }
+      }
+    }
+  ]) as Array<{ avgRating: number }>;
+
+  const newRating = result[0]?.avgRating || 0;
+
+  await this.offerModel.findByIdAndUpdate(
+    offerId,
+    { rating: Math.round(newRating * 10) / 10 }  // Округление до 0.1
+  );
+}
+```
+
+**Преимущества:**
+- ✅ Точный расчет среднего значения
+- ✅ Автоматическое обновление при каждом комментарии
+- ✅ Не требует хранения дополнительных данных (sum, count)
+
+**Альтернатива:** Хранить отдельно сумму рейтингов и количество оценок для более быстрого расчета при больших объемах данных.
+
+#### 6. Регистрация компонентов
+
+**Обновлен `Component.enum.ts`:**
+```typescript
+export const Component = {
+  // ...existing
+  CommentService: Symbol.for('CommentService'),
+  CommentModel: Symbol.for('CommentModel'),
+} as const;
+```
+
+### Структура проекта после выполнения задания
+
+```
+src/shared/modules/
+├── comment/                         ✅ Новый модуль
+│   ├── comment.entity.ts
+│   ├── create-comment.dto.ts
+│   ├── comment-service.interface.ts
+│   └── default-comment.service.ts
+├── offer/
+│   ├── offer.entity.ts             ✅ Добавлено поле favorites
+│   ├── offer-service.interface.ts  ✅ 12 методов вместо 2
+│   ├── default-offer.service.ts    ✅ Полная реализация
+│   ├── create-offer.dto.ts
+│   └── update-offer.dto.ts         ✅ Новый
+└── user/
+    ├── user-service.interface.ts   ✅ 6 методов вместо 3
+    └── default-user.service.ts     ✅ Расширенная реализация
+```
+
+### Итоговая функциональность
+
+**CommentService (2 метода):**
+1. Создание комментария с автообновлением счетчика и рейтинга
+2. Получение комментариев для предложения
+
+**OfferService (12 методов):**
+1. CRUD: create, find, findById, updateById, deleteById
+2. Фильтры: findPremiumByCity, findFavorites
+3. Избранное: addToFavorites, removeFromFavorites  
+4. Автоматика: incCommentCount, updateRating
+5. Утилиты: exists
+
+**UserService (6 методов):**
+1. Аутентификация: create, findByEmail, findOrCreate
+2. CRUD: findById, updateById
+3. Утилиты: exists
+
+### Технические детали
+
+**MongoDB операции:**
+- `$inc` - атомарное увеличение счетчика
+- `$addToSet` - добавление в массив без дубликатов
+- `$pull` - удаление из массива
+- `$avg` - агрегация для среднего значения
+- `populate()` - заполнение ссылок на связанные документы
+
+**Валидация:**
+- На уровне Mongoose: `@prop({ min, max, required, minlength, maxlength })`
+- Валидация DTO будет добавлена в следующих модулях
+
+**Типобезопасность:**
+- Все методы строго типизированы через TypeScript
+- DocumentType<T> для результатов запросов
+- Ref<T> для ссылок на другие сущности
+
+---
+
+
 ## Полное техническое задание
 
 <details>
