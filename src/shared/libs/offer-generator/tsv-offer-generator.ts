@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import { OfferGenerator } from './offer-generator.interface.js';
 import { generateRandomValue, getRandomItem, getRandomItems, getRandomBoolean } from '../../helpers/common.js';
-import { MockServerData, City, HousingType, UserType } from '../../types/index.js';
+import { MockServerData, City, OfferType, UserType } from '../../types/index.js';
 
 const MIN_PRICE = 500;
 const MAX_PRICE = 2000;
@@ -27,7 +27,7 @@ export class TSVOfferGenerator implements OfferGenerator {
     const isPremium = getRandomBoolean();
     const isFavorite = getRandomBoolean();
     const rating = generateRandomValue(MIN_RATING, MAX_RATING, 1);
-    const type = getRandomItem([HousingType.Apartment, HousingType.House, HousingType.Room, HousingType.Hotel]);
+    const type = getRandomItem([OfferType.Apartment, OfferType.House, OfferType.Room, OfferType.Hotel]);
     const rooms = generateRandomValue(MIN_ROOMS, MAX_ROOMS);
     const guests = generateRandomValue(MIN_GUESTS, MAX_GUESTS);
     const price = generateRandomValue(MIN_PRICE, MAX_PRICE);

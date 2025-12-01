@@ -1,52 +1,26 @@
 import { User } from './user.type.js';
+import { City } from './city.type.js';
+import { OfferType } from './offer-type.enum.js';
+import { Location } from './location.type.js';
 
-export enum City {
-    Paris = 'Paris',
-    Cologne = 'Cologne',
-    Brussels = 'Brussels',
-    Amsterdam = 'Amsterdam',
-    Hamburg = 'Hamburg',
-    Dusseldorf = 'Dusseldorf'
-}
-
-export enum HousingType {
-    Apartment = 'apartment',
-    House = 'house',
-    Room = 'room',
-    Hotel = 'hotel'
-}
-
-export enum Amenity {
-    Breakfast = 'Breakfast',
-    AirConditioning = 'Air conditioning',
-    LaptopFriendlyWorkspace = 'Laptop friendly workspace',
-    BabySeat = 'Baby seat',
-    Washer = 'Washer',
-    Towels = 'Towels',
-    Fridge = 'Fridge'
-}
-
-export interface Coordinates {
-    latitude: number;
-    longitude: number;
-}
+export type Amenity = 'Breakfast' | 'Air conditioning' | 'Laptop friendly workspace' | 'Baby seat' | 'Washer' | 'Towels' | 'Fridge';
 
 export interface Offer {
     title: string;
     description: string;
-    publishDate: Date;
+    postDate: Date;
     city: City;
     previewImage: string;
-    photos: string[];
+    images: string[];
     isPremium: boolean;
     isFavorite: boolean;
     rating: number;
-    type: HousingType;
-    rooms: number;
-    guests: number;
+    type: OfferType;
+    bedrooms: number;
+    maxAdults: number;
     price: number;
-    amenities: Amenity[];
+    goods: Amenity[];
     author: User;
     commentCount: number;
-    coordinates: Coordinates;
+    location: Location;
 }
