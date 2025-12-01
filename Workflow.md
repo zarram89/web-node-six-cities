@@ -142,6 +142,16 @@ docker compose up -d
 
 **Mongo Express:** Откройте в браузере `http://localhost:8081`
 
+#### Импорт данных в базу
+
+```bash
+# Используя настройки из .env
+npm run ts ./src/main.cli.ts -- --import ./mocks/mock-data.tsv
+
+# С явным указанием параметров
+npm run ts ./src/main.cli.ts -- --import ./mocks/mock-data.tsv admin test localhost 27017 six-cities secret
+```
+
 #### Остановить MongoDB контейнеры
 
 ```bash

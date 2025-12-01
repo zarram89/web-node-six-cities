@@ -541,18 +541,6 @@ web-node-six-cities/
 ```bash
 # Запуск мок-сервера
 npm run server
-
-# Генерация 100 тестовых предложений
-npm run cli -- --generate 100 ./mocks/test-data.tsv http://localhost:3123/db
-
-# Импорт сгенерированных данных
-npm run cli -- --import ./mocks/test-data.tsv
-```
-
-### Технические детали
-
-**Работа с большими файлами:**
-- Используются Node.js Streams API
 - Построчное чтение без загрузки всего файла
 - Эффективное использование памяти
 - Поддержка файлов > 2GB

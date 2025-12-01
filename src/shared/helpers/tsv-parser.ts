@@ -1,4 +1,5 @@
-import { Offer, City, HousingType, Amenity, UserType } from '../types/index.js';
+import { Offer, City, OfferType, Amenity } from '../types/index.js';
+import { UserType } from '../types/user.type.js';
 
 export class TSVParser {
   /**
@@ -19,18 +20,18 @@ export class TSVParser {
       const [
         title,
         description,
-        publishDate,
+        postDate,
         city,
         previewImage,
-        photos,
+        images,
         isPremium,
         isFavorite,
         rating,
         type,
-        rooms,
-        guests,
+        bedrooms,
+        maxAdults,
         price,
-        amenities,
+        goods,
         authorName,
         authorEmail,
         authorType,
@@ -43,18 +44,18 @@ export class TSVParser {
       return {
         title,
         description,
-        publishDate: new Date(publishDate),
+        postDate: new Date(postDate),
         city: city as City,
         previewImage,
-        photos: photos.split(';'),
+        images: images.split(';'),
         isPremium: isPremium === 'true',
         isFavorite: isFavorite === 'true',
         rating: parseFloat(rating),
-        type: type as HousingType,
-        rooms: parseInt(rooms, 10),
-        guests: parseInt(guests, 10),
+        type: type as OfferType,
+        bedrooms: parseInt(bedrooms, 10),
+        maxAdults: parseInt(maxAdults, 10),
         price: parseInt(price, 10),
-        amenities: amenities.split(';') as Amenity[],
+        goods: goods.split(';') as Amenity[],
         author: {
           name: authorName,
           email: authorEmail,
@@ -63,7 +64,7 @@ export class TSVParser {
           password: '' // пароль не хранится в TSV
         },
         commentCount: parseInt(commentCount, 10),
-        coordinates: {
+        location: {
           latitude: parseFloat(latitude),
           longitude: parseFloat(longitude)
         }
