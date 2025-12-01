@@ -1054,6 +1054,152 @@ npm run dev:start       # Сервер на http://localhost:4000
 
 ---
 
+## Module 7 Task 1: Тестирование Middleware и Валидации
+
+### Подготовка
+Убедитесь, что сервер запущен:
+```bash
+# Запуск MongoDB (если не запущена)
+docker-compose up -d
+
+# Запуск сервера
+npm run dev:start
+```
+
+### 1. Тестирование валидации DTO (class-validator)
+
+**Тест 1.1: Невалидные данные пользователя**
+```bash
+curl -X POST http://localhost:4000/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "",
+    "email": "invalid-email",
+    "password": "123",
+    "type": "standard"
+  }'
+```
+**Ожидаемый результат:** 400 Bad Request с сообщением о валидации:
+```json
+{
+  "error": "Validation error: Min length for name is 1; email must be valid address; Min length for password is 6"
+}
+```
+
+**Тест 1.2: Валидные данные пользователя**
+```bash
+curl -X POST http://localhost:4000/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Test User",
+    "email": "testuser@example.com",
+    "password": "password123",
+    "type": "standard"
+  }'
+```
+**Ожидаемый результат:** 201 Created с данными созданного пользователя
+
+**Тест 1.3: Невалидный комментарий**
+```bash
+# Замените OFFER_ID на реальный ID из GET /offers
+curl -X POST http://localhost:4000/comments/OFFER_ID \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Bad",
+    "rating": 10,
+    "userId": "invalid"
+  }'
+```
+**Ожидаемый результат:** 400 Bad Request с описанием ошибок валидации:
+- text: Min length is 5
+- rating: Max rating is 5  
+- userId: must be valid MongoDB ID
+
+### 2. Тестирование валидации ObjectID
+
+**Тест 2.1: Невалидный ObjectID для предложения**
+```bash
+curl http://localhost:4000/offers/invalid-id
+```
+**Ожидаемый результат:** 400 Bad Request
+```json
+{
+  "error": "offerId field is not a valid ObjectID"
+}
+```
+
+**Тест 2.2: Невалидный ObjectID для комментариев**
+```bash
+curl http://localhost:4000/comments/test123
+```
+**Ожидаемый результат:** 400 Bad Request
+```json
+{
+  "error": "offerId field is not a valid ObjectID"
+}
+```
+
+**Тест 2.3: Валидный ObjectID (но несуществующий)**
+```bash
+curl http://localhost:4000/offers/507f1f77bcf86cd799439011
+```
+**Ожидаемый результат:** 404 Not Found (если предложение не существует)
+
+### 3. Тестирование работы Comment API
+
+**Тест 3.1: Получить список предложений**
+```bash
+curl http://localhost:4000/offers
+```
+Скопируйте `id` одного из предложений для следующих тестов.
+
+**Тест 3.2: Получить комментарии для предложения**
+```bash
+curl http://localhost:4000/comments/OFFER_ID
+```
+**Ожидаемый результат:** Массив комментариев (может быть пустым)
+
+**Тест 3.3: Создать валидный комментарий**
+Сначала получите USER_ID из созданного  пользователя, затем:
+```bash
+curl -X POST http://localhost:4000/comments/OFFER_ID \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Great place to stay! Highly recommended.",
+    "rating": 5,
+    "userId": "USER_ID"
+  }'
+```
+**Ожидаемый результат:** 201 Created с данными комментария
+
+### 4. Быстрая проверка всех endpoints
+
+```bash
+# 1. Список предложений (должен работать)
+curl http://localhost:4000/offers
+
+# 2. Невалидный ID (должен вернуть 400)
+curl http://localhost:4000/offers/bad-id
+
+# 3. Невалидный пользователь (должен вернуть 400)
+curl -X POST http://localhost:4000/users/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"","email":"bad","password":"1","type":"x"}'
+
+# 4. Невалидный комментарий (замените OFFER_ID)
+curl -X POST http://localhost:4000/comments/OFFER_ID \
+  -H "Content-Type: application/json" \
+  -d '{"text":"","rating":99,"userId":"bad"}'
+```
+
+### Результаты тестирования
+- ✅ Валидация DTO работает через class-validator
+- ✅ Валидация ObjectID работает для всех маршрутов с параметрами
+- ✅ Middleware применяется к UserController, OfferController, CommentController
+- ✅ Ошибки валидации возвращают 400 Bad Request с описанием проблем
+- ✅ Валидные запросы обрабатываются корректно
+
+---
 
 ## Полное техническое задание
 

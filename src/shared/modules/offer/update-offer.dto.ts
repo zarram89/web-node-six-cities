@@ -11,7 +11,7 @@ export class UpdateOfferDto {
   public price?: number;
   public goods?: string[];
   public location?: {
-        latitude: number;
-        longitude: number;
-    };
+    latitude: number;
+    longitude: number;
+  };
 }

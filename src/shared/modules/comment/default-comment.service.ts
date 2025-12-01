@@ -4,7 +4,7 @@ import { Component } from '../../types/component.enum.js';
 import { Logger } from '../../libs/logger/logger.interface.js';
 import { DocumentType, types } from '@typegoose/typegoose';
 import { CommentEntity } from './comment.entity.js';
-import { CreateCommentDto } from './create-comment.dto.js';
+import { CreateCommentDto } from './dto/create-comment.dto.js';
 import { OfferService } from '../offer/offer-service.interface.js';
 import { Types } from 'mongoose';
 
