@@ -98,12 +98,12 @@ export class ImportCommand implements Command {
         console.error(chalk.red('\nОшибка при импорте:'), error);
       }
       await this.databaseClient.disconnect();
-      // eslint-disable-next-line unicorn/no-process-exit
+      // eslint-disable-next-line unicorn/no-process-exit, node/no-process-exit, no-process-exit
       process.exit(1); // Exit with error code
     }
 
     await this.databaseClient.disconnect();
-    // eslint-disable-next-line unicorn/no-process-exit
+    // eslint-disable-next-line unicorn/no-process-exit, node/no-process-exit, no-process-exit
     process.exit(0); // Exit with success code
   }
 
