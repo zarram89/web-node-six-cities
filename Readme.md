@@ -1015,6 +1015,46 @@ src/shared/modules/
 ---
 
 
+## Модуль 6. Задание 1 (module6-task1): REST API контроллеры
+
+### Описание
+
+Реализован REST API слой с Express.js. Созданы контроллеры User и Offer, настроена обработка исключений и маршрутизация.
+
+### Решение
+
+✅ **Выполнено:**
+- Установлены зависимости: express, http-status-codes, class-transformer, express-async-handler
+- Создан BaseController с методами ok(), created(), noContent()
+- Реализован AppExceptionFilter для глобальной обработки ошибок
+- Созданы UserController и OfferController с полным набором эндпоинтов
+- Настроена интеграция с RestApplication через DI
+- Созданы модульные контейнеры для User, Offer, Comment
+
+**API Endpoints:**
+```
+/users/register (POST)           - Регистрация
+/users/login (POST/GET)          - Вход/статус
+/offers/ (GET/POST)              - Список/создание
+/offers/:offerId (GET/PATCH/DELETE) - CRUD операции
+```
+
+**Запуск:**
+```bash
+docker-compose up -d    # MongoDB
+npm run dev:start       # Сервер на http://localhost:4000
+```
+
+**⚠️ Важно:** 
+- MongoDB порт `27017` (не 27018!)
+- Отступы 2 пробела
+- Routes регистрировать ДО exception filters
+
+**Подробная документация:** [walkthrough.md](file:///C:/Users/zarra/.gemini/antigravity/brain/c5e7345f-2b98-484a-8afb-232014b0379d/walkthrough.md) - решения проблем и чеклист
+
+---
+
+
 ## Полное техническое задание
 
 <details>
