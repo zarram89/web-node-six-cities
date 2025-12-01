@@ -131,24 +131,6 @@ npm run dev:start
 ```bash
 docker compose up -d
 ```
-
-Запускает два контейнера:
-- **MongoDB** на порту `27017` (база данных)
-- **Mongo Express** на порту `8081` (веб-интерфейс для управления БД)
-
-**Учетные данные:**
-- **MongoDB:** username `admin`, password `test`
-- **Mongo Express UI:** username `admin`, password `test`
-
-**Mongo Express:** Откройте в браузере `http://localhost:8081`
-
-#### Импорт данных в базу
-
-```bash
-# Используя настройки из .env
-npm run ts ./src/main.cli.ts -- --import ./mocks/mock-data.tsv
-
-# С явным указанием параметров
 npm run ts ./src/main.cli.ts -- --import ./mocks/mock-data.tsv admin test localhost 27017 six-cities secret
 ```
 
@@ -171,6 +153,23 @@ npm start
 ```
 
 В процессе запуска проекта будет выполнен процесс «Сборки проекта» и запуска результирующего кода.
+
+### Модуль 5: Open API Спецификация
+
+#### Просмотр спецификации
+
+Спецификация API расположена в `specification/specification.yml`
+
+**Просмотр через OpenAPI Editor в VS Code:**
+1. Откройте файл `specification/specification.yml`
+2. Нажмите `Ctrl+Shift+P` → `OpenAPI: Show Preview`
+
+**Основные эндпоинты:**
+- `/users/*` - Операции с пользователями (регистрация, логин, аватары)
+- `/offers/*` - Операции с предложениями (CRUD, избранное, премиум)
+- `/comments/*` - Операции с комментариями
+
+**Безопасность:** Bearer token (JWT) для защищенных эндпоинтов
 
 ## Структура проекта
 
