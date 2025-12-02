@@ -16,6 +16,10 @@ dist/
 /mocks/generated*.tsv
 /mocks/test*.tsv
 
+# Upload and static files
+upload/
+static/
+
 # Environment variables
 .env
 

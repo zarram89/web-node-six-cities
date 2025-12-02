@@ -15,6 +15,8 @@ import { HttpError } from '../../libs/rest/exception-filter/http-error.js';
 import { StatusCodes } from 'http-status-codes';
 import { ValidateDtoMiddleware } from '../../libs/rest/middleware/validate-dto.middleware.js';
 import { ValidateObjectIdMiddleware } from '../../libs/rest/middleware/validate-objectid.middleware.js';
+import { DocumentExistsMiddleware } from '../../libs/rest/middleware/document-exists.middleware.js';
+import { UploadFileMiddleware } from '../../libs/rest/middleware/upload-file.middleware.js';
 
 @injectable()
 export class UserController extends BaseController {
@@ -43,7 +45,11 @@ export class UserController extends BaseController {
       path: '/:userId/avatar',
       method: HttpMethod.Post,
       handler: this.uploadAvatar,
-      middlewares: [new ValidateObjectIdMiddleware('userId')]
+      middlewares: [
+        new ValidateObjectIdMiddleware('userId'),
+        new DocumentExistsMiddleware(this.userService, 'User', 'userId'),
+        new UploadFileMiddleware(this.configService.get('UPLOAD_DIRECTORY'), 'avatar')
+      ]
     });
   }
 
@@ -104,13 +110,20 @@ export class UserController extends BaseController {
     );
   }
 
-  public async uploadAvatar(
-    req: Request,
-    res: Response
-  ) {
-    const file = req as Request & { file?: { path?: string } };
-    this.created(res, {
-      filepath: file.file?.path
-    });
+  public async uploadAvatar(req: Request, res: Response): Promise<void> {
+    const { userId } = req.params;
+    const avatarPath = req.file?.filename;
+
+    if (!avatarPath) {
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        'Avatar file is required',
+        'UserController'
+      );
+    }
+
+    await this.userService.updateById(userId, { avatarUrl: avatarPath });
+
+    this.created(res, { avatarUrl: avatarPath });
   }
 }

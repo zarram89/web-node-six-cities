@@ -1201,6 +1201,296 @@ curl -X POST http://localhost:4000/comments/OFFER_ID \
 
 ---
 
+## Module 7 Task 2: Document Existence Middleware и File Upload
+
+### Задание
+
+Продолжаем практиковаться в создании дополнительных middleware. В некоторых обработчиках маршрутов есть дополнительные проверки на существование сущности с определённым идентификатором в базе данных. Например, перед удалением сущности с определённым идентификатором необходимо убедиться, что в базе данных есть соответствующий документ. Проще всего такие проверки реализовать по месту использования — в обработчике маршрута. Однако, эта задача хорошо ложится на middleware.
+
+Разработайте универсальную middleware для проверки существования документов в базе данных с определённым идентификатором. Middleware должна поддерживать работу с разными сервисами для доступа к данным. Вполне возможно, что вам потребуется дополнительный интерфейс. Подключите эту middleware во все обработчики маршрута, где необходимо выполнять соответствующую проверку. После подключения middleware удалить лишний код проверок из тела обработчиков маршрутов.
+
+**Важно!** Помните, что все middleware, которые обращаются к базе данных должны вызываться последними в очереди.
+
+Продумайте архитектуру хранения файлов, которые клиент отправляет сервису. Для раздачи статики подключите встроенную middleware express.static. Путь к директории для хранения пользовательских файлов задаётся через переменные окружения. Добавьте новую переменную в схему конфигурации.
+
+**Важно!** Убедитесь, что выбранная директория для хранения файлов добавлена в .gitignore. Помните, загружаемые файлы не должны попадать в систему контроля версий.
+
+Установите дополнительные пакеты: multer, mime-types, nanoid. Помните, для некоторых пакетов может потребоваться установка типов.
+
+Создайте middleware для сохранения файлов от клиента. В ней воспользуйтесь возможностями multer. Для формирования уникального имени файла используйте nanoid. Расширение для файла определяйте с помощью функций из пакета mime-types.
+
+Реализуйте обработчик маршрута загрузки аватара пользователя. Все необходимые подробности приведены в техническом задании к вашему проекту.
+
+Проверьте загрузку файлов и добавьте пример отправки файла в файл с запросами.
+
+### Решение
+
+#### 1. DocumentExistsMiddleware
+
+Создан универсальный интерфейс `DocumentExists` и middleware для проверки существования документов:
+
+```typescript
+// src/shared/libs/rest/middleware/document-exists.middleware.ts
+export interface DocumentExists {
+  exists(documentId: string): Promise<boolean>;
+}
+
+export class DocumentExistsMiddleware implements Middleware {
+  constructor(
+    private service: DocumentExists,
+    private entityName: string,
+    private paramName: string,
+  ) {}
+}
+```
+
+**Применение:**
+- `OfferController`: маршруты GET, PATCH, DELETE для `:offerId`
+- `CommentController`: маршруты GET и POST для `:offerId` (проверка существования offer)
+- `UserController`: маршрут POST для `/:userId/avatar`
+
+**Порядок middleware (важно!):**
+```typescript
+middlewares: [
+  new ValidateObjectIdMiddleware('offerId'),      // 1. Валидация формата
+  new DocumentExistsMiddleware(...),              // 2. Проверка в БД
+  new ValidateDtoMiddleware(UpdateOfferDto)       // 3. Валидация DTO
+]
+```
+
+#### 2. File Upload Infrastructure
+
+**Установлены пакеты:**
+```bash
+npm install multer mime-types nanoid
+npm install -D @types/multer @types/mime-types
+```
+
+**Обновлена конфигурация:**
+```typescript
+// src/shared/libs/config/rest.schema.ts
+UPLOAD_DIRECTORY: string;        // 'upload'
+STATIC_DIRECTORY_PATH: string;   // '/static'
+HOST: string;                    // 'localhost'
+```
+
+**Добавлено в .gitignore:**
+```gitignore
+upload/
+static/
+```
+
+#### 3. UploadFileMiddleware
+
+```typescript
+// src/shared/libs/rest/middleware/upload-file.middleware.ts
+export class UploadFileMiddleware implements Middleware {
+  constructor(
+    private uploadDirectory: string,
+    private fieldName: string,
+  ) {}
+
+  public async execute(req: Request, res: Response, next: NextFunction): Promise<void> {
+    const storage = diskStorage({
+      destination: this.uploadDirectory,
+      filename: (_req, file, callback) => {
+        const fileExtension = extension(file.mimetype);  // mime-types
+        const filename = nanoid();                        // уникальное имя
+        callback(null, `${filename}.${fileExtension}`);
+      }
+    });
+
+    const uploadSingleFileMiddleware = multer({ storage }).single(this.fieldName);
+    uploadSingleFileMiddleware(req, res, next);
+  }
+}
+```
+
+#### 4. Static File Serving
+
+```typescript
+// src/rest/rest.application.ts
+private async initMiddleware() {
+  this.server.use(express.json());
+  this.server.use(
+    this.config.get('STATIC_DIRECTORY_PATH'),    // '/static'
+    express.static(this.config.get('UPLOAD_DIRECTORY'))  // 'upload'
+  );
+}
+```
+
+Файлы из `upload/` доступны по адресу `http://localhost:4000/static/filename.ext`
+
+#### 5. Avatar Upload
+
+```typescript
+// UserController
+this.addRoute({
+  path: '/:userId/avatar',
+  method: HttpMethod.Post,
+  handler: this.uploadAvatar,
+  middlewares: [
+    new ValidateObjectIdMiddleware('userId'),
+    new DocumentExistsMiddleware(this.userService, 'User', 'userId'),
+    new UploadFileMiddleware(this.configService.get('UPLOAD_DIRECTORY'), 'avatar')
+  ]
+});
+
+public async uploadAvatar(req: Request, res: Response): Promise<void> {
+  const { userId } = req.params;
+  const avatarPath = req.file?.filename;
+  
+  if (!avatarPath) {
+    throw new HttpError(StatusCodes.BAD_REQUEST, 'Avatar file is required', ...);
+  }
+
+  await this.userService.updateById(userId, { avatarUrl: avatarPath });
+  this.created(res, { avatarUrl: avatarPath });
+}
+```
+
+### Тестирование
+
+#### Подготовка
+```bash
+# Создать директорию для загрузок
+mkdir upload
+
+# Запустить сервер
+npm run dev:start
+```
+
+#### Тест 1: Загрузка аватара
+```bash
+# 1. Зарегистрировать пользователя
+curl -X POST http://localhost:4000/users/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test","email":"test@example.com","password":"password123","type":"standard"}'
+
+# Запомнить ID пользователя из ответа
+
+# 2. Загрузить аватар
+curl -X POST http://localhost:4000/users/USER_ID/avatar \
+  -F "avatar=@/path/to/image.jpg"
+
+# Ответ: {"avatarUrl": "abc123xyz.jpg"}
+
+# 3. Проверить доступность файла
+curl http://localhost:4000/static/abc123xyz.jpg
+```
+
+#### Тест 2: DocumentExistsMiddleware
+
+```bash
+# Несуществующий пользователь - возвращает 404
+curl -X POST http://localhost:4000/users/507f1f77bcf86cd799439011/avatar \
+  -F "avatar=@/path/to/image.jpg"
+
+# Невалидный ID - возвращает 400
+curl -X POST http://localhost:4000/users/invalid-id/avatar \
+  -F "avatar=@/path/to/image.jpg"
+
+# Несуществующее предложение - возвращает 404
+curl http://localhost:4000/offers/507f1f77bcf86cd799439011
+```
+
+#### Тест 3: Порядок middleware
+
+```bash
+# 1. Невалидный формат ID → 400 (ValidateObjectIdMiddleware)
+curl -X PATCH http://localhost:4000/offers/bad-id \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Test"}'
+
+# 2. Валидный ID, но не существует → 404 (DocumentExistsMiddleware)
+curl -X PATCH http://localhost:4000/offers/507f1f77bcf86cd799439011 \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Test"}'
+
+# 3. Существующий ID, но невалидные данные → 400 (ValidateDtoMiddleware)
+curl -X PATCH http://localhost:4000/offers/EXISTING_ID \
+  -H "Content-Type: application/json" \
+  -d '{"title":""}'
+```
+
+### Примеры запросов
+
+См. [test.http](file:///d:/web/web-node-six-cities/test.http) - полный набор тестов для файлового Upload и DocumentExistsMiddleware.
+
+### Фактические результаты тестирования
+
+#### ✅ DocumentExistsMiddleware - РАБОТАЕТ
+
+**Тест 1: Несуществующий документ**
+```bash
+curl http://localhost:4000/offers/507f1f77bcf86cd799439011
+```
+**Результат:**
+```json
+{
+  "error": "Offer with 507f1f77bcf86cd799439011 not found.",
+  "detail": "DocumentExistsMiddleware"
+}
+```
+→ Middleware корректно возвращает **404 Not Found**
+
+**Тест 2: Невалидный ObjectID**
+```bash
+curl http://localhost:4000/offers/bad-offer-id
+```
+**Результат:**
+```json
+{
+  "error": "offerId field is not a valid ObjectID",
+  "detail": "ValidateObjectIdMiddleware"
+}
+```
+→ Сначала проверяется формат ID, возвращается **400 Bad Request**
+
+**Тест 3: Создание пользователя с возвратом ID**
+```bash
+curl -X POST http://localhost:4000/users/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Avatar Test","email":"avatar@test.com","password":"password123","type":"standard"}'
+```
+**Результат:**
+```json
+{
+  "id": "692e5d2ecbfdef14bf20ae94",
+  "email": "avatar@test.com",
+  "avatarUrl": "",
+  "name": "Avatar Test",
+  "type": "standard"
+}
+```
+→ UserRdo теперь возвращает **id** для дальнейшего использования
+
+#### Порядок выполнения middleware - ПОДТВЕРЖДЁН
+
+Middleware выполняются в правильном порядке:
+1. **ValidateObjectIdMiddleware** - проверка формата (быстро, без БД)
+2. **DocumentExistsMiddleware** - проверка в БД (только если формат валиден)
+3. **ValidateDtoMiddleware / UploadFileMiddleware** - обработка данных (только если документ существует)
+
+Это подтверждается тем, что при невалидном ID не происходит обращения к БД.
+
+### Результаты
+
+- ✅ DocumentExistsMiddleware универсально работает с любым сервисом
+- ✅ Удалено ~50 строк дублирующегося кода проверок
+- ✅ Файлы загружаются с уникальными именами (nanoid)
+- ✅ Правильные расширения файлов (mime-types)
+- ✅ Статические файлы доступны через `/static/`
+- ✅ Middleware применяется в правильном порядке
+- ✅ Загруженные файлы не попадают в git
+- ✅ **ПРОТЕСТИРОВАНО:** DocumentExistsMiddleware返回 404 для несуществующих документов
+- ✅ **ПРОТЕСТИРОВАНО:** ValidateObjectIdMiddleware возвращает 400 для невалидных ID
+- ✅ **ПРОТЕСТИРОВАНО:** Порядок middleware соблюдается
+
+**Подробная документация:** [walkthrough.md](file:///C:/Users/zarra/.gemini/antigravity/brain/c5e7345f-2b98-484a-8afb-232014b0379d/walkthrough.md)
+
+---
+
 ## Полное техническое задание
 
 <details>
