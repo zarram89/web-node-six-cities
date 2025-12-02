@@ -38,6 +38,12 @@ export class UserEntity extends defaultClasses.TimeStamps implements User {
     this.type = userData.type;
   }
 
+  public setPassword(password: string, salt: string) {
+    this.password = createHmac('sha256', salt)
+      .update(password)
+      .digest('hex');
+  }
+
   public verifyPassword(password: string, salt: string): boolean {
     const hash = createHmac('sha256', salt)
       .update(password)

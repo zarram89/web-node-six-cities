@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsDateString, IsEnum, IsInt, IsNumber, IsObject, IsString, Max, MaxLength, Min, MinLength, ArrayMinSize, ArrayMaxSize, IsIn } from 'class-validator';
+import { IsArray, IsBoolean, IsDateString, IsEnum, IsInt, IsNumber, IsObject, IsOptional, IsString, Max, MaxLength, Min, MinLength, ArrayMinSize, ArrayMaxSize, IsIn } from 'class-validator';
 import { OfferType } from '../../types/offer-type.enum.js';
 import { City } from '../../types/city.type.js';
 import { Location } from '../../types/location.type.js';
@@ -38,10 +38,12 @@ export class CreateOfferDto {
   @IsBoolean({ message: 'isFavorite must be boolean' })
   public isFavorite!: boolean;
 
+
+  @IsOptional()
   @IsNumber({}, { message: 'rating must be a number' })
   @Min(1, { message: 'Min rating is 1' })
   @Max(5, { message: 'Max rating is 5' })
-  public rating!: number;
+  public rating?: number;
 
   @IsEnum(OfferType, { message: 'type must be a valid offer type' })
   public type!: OfferType;
