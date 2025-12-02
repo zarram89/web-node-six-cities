@@ -1,5 +1,6 @@
 import { injectable, inject } from 'inversify';
 import express, { Express } from 'express';
+import cors from 'cors';
 import { Logger } from '../shared/libs/logger/logger.interface.js';
 import { Config } from '../shared/libs/config/config.interface.js';
 import { Component } from '../shared/types/component.enum.js';
@@ -44,6 +45,7 @@ export class RestApplication {
 
   private async initMiddleware() {
     this.server.use(express.json());
+    this.server.use(cors());
     this.server.use(
       this.config.get('STATIC_DIRECTORY_PATH'),
       express.static(this.config.get('UPLOAD_DIRECTORY'))
