@@ -44,7 +44,7 @@ export class RestApplication {
   }
 
   private async initMiddleware() {
-    this.server.use(express.json());
+    this.server.use(express.json({ limit: '10mb' }));
     this.server.use(cors());
     this.server.use(
       this.config.get('STATIC_DIRECTORY_PATH'),

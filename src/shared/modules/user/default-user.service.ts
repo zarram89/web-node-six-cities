@@ -14,8 +14,8 @@ export class DefaultUserService implements UserService {
   ) { }
 
   public async create(dto: CreateUserDto, _salt: string): Promise<DocumentType<UserEntity>> {
-    const user = new UserEntity(dto); // Temporary cast until we implement password hashing properly
-    user.password = dto.password; // In real app, hash this with salt
+    const user = new UserEntity(dto);
+    user.setPassword(dto.password, _salt);
 
     const result = await this.userModel.create(user);
     this.logger.info(`New user created: ${user.email}`);

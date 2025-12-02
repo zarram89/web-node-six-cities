@@ -27,7 +27,7 @@ const Register = (): JSX.Element => {
     const formData = new FormData(form) as Iterable<[UserRegister]>;
     const data = Object.fromEntries(formData);
 
-    data.type = data.isPro ? UserType.Pro : UserType.Regular;
+    data.type = data.isPro ? UserType.Pro : UserType.Standard;
     delete data.isPro;
     dispatch(registerUser(data));
   };
@@ -107,14 +107,14 @@ const Register = (): JSX.Element => {
                 id="isPro"
               />
               <label htmlFor="isPro" className="register-form__is-pro-label">
-          Create pro account
+                Create pro account
               </label>
             </div>
             <button
               className="login__submit form__submit button"
               type="submit"
             >
-                Sign up
+              Sign up
             </button>
           </form>
         </section>

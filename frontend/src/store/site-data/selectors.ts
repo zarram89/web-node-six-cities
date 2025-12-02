@@ -6,10 +6,10 @@ import { Comparator, MAX_COMMENTS, StoreSlice, SubmitStatus } from '../../const'
 import { getCity, getSorting } from '../site-process/selectors';
 
 export const getIsOffersLoading = ({ [StoreSlice.SiteData]: SITE_DATA }: State): boolean => SITE_DATA.isOffersLoading;
-export const getOffers = ({ [StoreSlice.SiteData]: SITE_DATA}: State): Offer[] => SITE_DATA.offers;
+export const getOffers = ({ [StoreSlice.SiteData]: SITE_DATA }: State): Offer[] => SITE_DATA.offers;
 
 export const getIsFavoriteOffersLoading = ({ [StoreSlice.SiteData]: SITE_DATA }: State): boolean => SITE_DATA.isFavoriteOffersLoading;
-export const getFavoriteOffers = ({ [StoreSlice.SiteData]: SITE_DATA}: State): Offer[] => SITE_DATA.favoriteOffers;
+export const getFavoriteOffers = ({ [StoreSlice.SiteData]: SITE_DATA }: State): Offer[] => SITE_DATA.favoriteOffers;
 
 export const getIsOfferLoading = ({ [StoreSlice.SiteData]: SITE_DATA }: State): boolean => SITE_DATA.isOfferLoading;
 export const getOffer = ({ [StoreSlice.SiteData]: SITE_DATA }: State): Offer | null => SITE_DATA.offer;
@@ -20,7 +20,7 @@ export const getCommentStatus = ({ [StoreSlice.SiteData]: SITE_DATA }: State): S
 
 export const selectOffers = createSelector(
   [getOffers, getCity, getSorting],
-  (offers, city, sorting) => offers.filter((offer) => offer.city.name === city.name).sort(Comparator[sorting])
+  (offers, city, sorting) => offers.filter((offer) => offer.city?.name === city.name).sort(Comparator[sorting])
 );
 
 export const selectComments = createSelector(

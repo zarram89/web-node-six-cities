@@ -3,10 +3,17 @@ import { Offer, Amenity } from '../../types/offer.type.js';
 import { OfferType } from '../../types/offer-type.enum.js';
 import { UserEntity } from '../user/user.entity.js';
 import { Location } from '../../types/location.type.js';
-import { City } from '../../types/city.type.js';
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export interface OfferEntity extends defaultClasses.Base { }
+
+export class CityEntity {
+  @prop({ required: true })
+  public name!: string;
+
+  @prop({ required: true })
+  public location!: Location;
+}
 
 @modelOptions({
   schemaOptions: {
@@ -25,8 +32,8 @@ export class OfferEntity extends defaultClasses.TimeStamps {
   @prop({ required: true })
   public postDate!: Date;
 
-  @prop({ required: true })
-  public city!: City;
+  @prop({ required: true, type: () => CityEntity, _id: false })
+  public city!: CityEntity;
 
   @prop({ required: true })
   public previewImage!: string;
@@ -73,25 +80,54 @@ export class OfferEntity extends defaultClasses.TimeStamps {
   @prop({ required: true })
   public location!: Location;
 
-  constructor(offerData: Offer) {
+  constructor(offerData: Partial<Offer>) {
     super();
 
-    this.title = offerData.title;
-    this.description = offerData.description;
-    this.postDate = offerData.postDate;
-    this.city = offerData.city;
-    this.previewImage = offerData.previewImage;
-    this.images = offerData.images;
-    this.isPremium = offerData.isPremium;
-    this.isFavorite = offerData.isFavorite;
-    this.rating = offerData.rating;
-    this.type = offerData.type;
-    this.bedrooms = offerData.bedrooms;
-    this.maxAdults = offerData.maxAdults;
-    this.price = offerData.price;
-    this.goods = offerData.goods;
-    this.location = offerData.location;
-    this.commentCount = offerData.commentCount;
+    if (offerData.title) {
+      this.title = offerData.title;
+    }
+    if (offerData.description) {
+      this.description = offerData.description;
+    }
+    if (offerData.postDate) {
+      this.postDate = offerData.postDate;
+    }
+    if (offerData.previewImage) {
+      this.previewImage = offerData.previewImage;
+    }
+    if (offerData.images) {
+      this.images = offerData.images;
+    }
+    if (offerData.isPremium !== undefined) {
+      this.isPremium = offerData.isPremium;
+    }
+    if (offerData.isFavorite !== undefined) {
+      this.isFavorite = offerData.isFavorite;
+    }
+    if (offerData.rating !== undefined) {
+      this.rating = offerData.rating;
+    }
+    if (offerData.type) {
+      this.type = offerData.type;
+    }
+    if (offerData.bedrooms !== undefined) {
+      this.bedrooms = offerData.bedrooms;
+    }
+    if (offerData.maxAdults !== undefined) {
+      this.maxAdults = offerData.maxAdults;
+    }
+    if (offerData.price !== undefined) {
+      this.price = offerData.price;
+    }
+    if (offerData.goods) {
+      this.goods = offerData.goods;
+    }
+    if (offerData.location) {
+      this.location = offerData.location;
+    }
+    if (offerData.commentCount !== undefined) {
+      this.commentCount = offerData.commentCount;
+    }
   }
 }
 

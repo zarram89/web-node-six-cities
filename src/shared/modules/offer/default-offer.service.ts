@@ -17,7 +17,27 @@ export class DefaultOfferService implements OfferService {
   ) { }
 
   public async create(dto: CreateOfferDto): Promise<DocumentType<OfferEntity>> {
-    const result = await this.offerModel.create(dto);
+    const cityLocation = {
+      Paris: { latitude: 48.85661, longitude: 2.351499 },
+      Cologne: { latitude: 50.938361, longitude: 6.959974 },
+      Brussels: { latitude: 50.846557, longitude: 4.351697 },
+      Amsterdam: { latitude: 52.370216, longitude: 4.895168 },
+      Hamburg: { latitude: 53.550341, longitude: 10.000654 },
+      Dusseldorf: { latitude: 51.225402, longitude: 6.776314 }
+    }[dto.city];
+
+    const result = await this.offerModel.create({
+      ...dto,
+      rating: dto.rating ?? 0,
+      city: {
+        name: dto.city,
+        location: {
+          ...cityLocation,
+          zoom: 10
+        }
+      },
+      hostId: dto.hostId
+    });
     this.logger.info(`New offer created: ${dto.title}`);
     return result;
   }
