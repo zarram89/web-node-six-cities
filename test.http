@@ -1,0 +1,141 @@
+### Module 7 Task 2: Document Existence & File Upload Tests
+
+### ========================================
+### 1. User Registration & Avatar Upload
+### ========================================
+
+### Register a new user
+POST http://localhost:4000/users/register
+Content-Type: application/json
+
+{
+  "name": "Test User",
+  "email": "testupload@example.com",
+  "password": "password123",
+  "type": "standard"
+}
+
+### Upload avatar for user (replace USER_ID with actual ID from registration)
+POST http://localhost:4000/users/USER_ID/avatar
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="avatar"; filename="avatar.jpg"
+Content-Type: image/jpeg
+
+< ./path/to/test-avatar.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Test: Upload avatar for non-existent user (should return 404)
+POST http://localhost:4000/users/507f1f77bcf86cd799439011/avatar
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="avatar"; filename="avatar.jpg"
+Content-Type: image/jpeg
+
+< ./path/to/test-avatar.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Test: Invalid user ID (should return 400)
+POST http://localhost:4000/users/invalid-id/avatar
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="avatar"; filename="avatar.jpg"
+Content-Type: image/jpeg
+
+< ./path/to/test-avatar.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Check uploaded avatar (replace FILENAME with actual uploaded filename)
+GET http://localhost:4000/static/FILENAME.jpg
+
+### ========================================
+### 2. DocumentExistsMiddleware Tests (Offers)
+### ========================================
+
+### Get all offers (to get real IDs)
+GET http://localhost:4000/offers
+
+### Test: Get offer with valid ID (should work if offer exists)
+GET http://localhost:4000/offers/OFFER_ID
+
+### Test: Get offer with non-existent but valid ObjectID (should return 404)
+GET http://localhost:4000/offers/507f1f77bcf86cd799439011
+
+### Test: Get offer with invalid ObjectID (should return 400)
+GET http://localhost:4000/offers/invalid-id
+
+### Test: Update non-existent offer (should return 404)
+PATCH http://localhost:4000/offers/507f1f77bcf86cd799439011
+Content-Type: application/json
+
+{
+  "title": "Updated Title"
+}
+
+### Test: Delete non-existent offer (should return 404)
+DELETE http://localhost:4000/offers/507f1f77bcf86cd799439011
+
+### ========================================
+### 3. DocumentExistsMiddleware Tests (Comments)
+### ========================================
+
+### Test: Get comments for non-existent offer (should return 404)
+GET http://localhost:4000/comments/507f1f77bcf86cd799439011
+
+### Test: Create comment for non-existent offer (should return 404)
+POST http://localhost:4000/comments/507f1f77bcf86cd799439011
+Content-Type: application/json
+
+{
+  "text": "This should fail",
+  "rating": 5,
+  "userId": "507f1f77bcf86cd799439012"
+}
+
+### Test: Get comments for existing offer (replace OFFER_ID)
+GET http://localhost:4000/comments/OFFER_ID
+
+### ========================================
+### 4. Combined Middleware Test
+### ========================================
+
+### This tests the middleware order:
+### 1. ValidateObjectIdMiddleware (checks ID format)
+### 2. DocumentExistsMiddleware (checks if document exists in DB)
+### 3. ValidateDtoMiddleware (validates request body)
+
+### Invalid ID format - stops at ValidateObjectIdMiddleware (400)
+PATCH http://localhost:4000/offers/bad-id
+Content-Type: application/json
+
+{
+  "title": "Test"
+}
+
+### Valid ID format but non-existent - stops at DocumentExistsMiddleware (404)
+PATCH http://localhost:4000/offers/507f1f77bcf86cd799439011
+Content-Type: application/json
+
+{
+  "title": "Test"
+}
+
+### Existing ID but invalid data - stops at ValidateDtoMiddleware (400)
+### (Replace OFFER_ID with real ID)
+PATCH http://localhost:4000/offers/OFFER_ID
+Content-Type: application/json
+
+{
+  "title": ""
+}
+
+### ========================================
+### 5. Static File Serving Test
+### ========================================
+
+### After uploading an avatar, the file should be accessible at:
+### GET http://localhost:4000/static/FILENAME.ext
+### where FILENAME is the value returned by upload endpoint

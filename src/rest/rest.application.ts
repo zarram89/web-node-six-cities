@@ -44,6 +44,10 @@ export class RestApplication {
 
   private async initMiddleware() {
     this.server.use(express.json());
+    this.server.use(
+      this.config.get('STATIC_DIRECTORY_PATH'),
+      express.static(this.config.get('UPLOAD_DIRECTORY'))
+    );
   }
 
   private async initRoutes() {

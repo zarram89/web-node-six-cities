@@ -186,9 +186,152 @@ npm start
 - `default-offer.service.ts` - 12 методов для работы с предложениями
 - `default-user.service.ts` - 6 методов для работы с пользователями
 
-**Авточекие вычисления:**
+**Автоматические вычисления:**
 - `commentCount` - атомарный $inc при создании комментария
 - `rating` - MongoDB aggregation ($avg) при каждом комментарии
+
+---
+
+## Module 7 Task 2: Document Existence Middleware и File Upload
+
+### Цель
+
+Реализовать универсальную middleware для проверки существования документов и систему загрузки файлов.
+
+### Шаги выполнения
+
+#### 1. Установка зависимостей
+
+```bash
+npm install multer mime-types nanoid
+npm install -D @types/multer @types/mime-types
+```
+
+#### 2. DocumentExistsMiddleware
+
+**Создать:**
+- `src/shared/libs/rest/middleware/document-exists.middleware.ts`
+- Интерфейс `DocumentExists` с методом `exists(id: string): Promise<boolean>`
+- Middleware класс, принимающий сервис, имя сущности и имя параметра
+
+**Применить к маршрутам:**
+- OfferController: `GET/PATCH/DELETE /:offerId`
+- CommentController: `GET/POST /:offerId`
+- UserController: `POST /:userId/avatar`
+
+**Порядок middleware:**
+```
+ValidateObjectId → DocumentExists → ValidateDto/UploadFile
+```
+
+#### 3. File Upload Infrastructure
+
+**Обновить конфигурацию:**
+```typescript
+// rest.schema.ts
+UPLOAD_DIRECTORY: 'upload'
+STATIC_DIRECTORY_PATH: '/static'
+HOST: 'localhost'
+```
+
+**Обновить .gitignore:**
+```
+upload/
+static/
+```
+
+**Создать .env.example:**
+```env
+UPLOAD_DIRECTORY=upload
+STATIC_DIRECTORY_PATH=/static
+HOST=localhost
+```
+
+#### 4. UploadFileMiddleware
+
+**Создать `src/shared/libs/rest/middleware/upload-file.middleware.ts`:**
+- Использовать `multer.diskStorage`
+- Генерировать имена файлов через `nanoid()`
+- Определять расширения через `mime-types.extension()`
+
+#### 5. Static File Serving
+
+**Обновить `src/rest/rest.application.ts`:**
+```typescript
+this.server.use(
+  this.config.get('STATIC_DIRECTORY_PATH'),
+  express.static(this.config.get('UPLOAD_DIRECTORY'))
+);
+```
+
+#### 6. Avatar Upload
+
+**Создать:**
+- `src/shared/modules/user/dto/update-user.dto.ts`
+
+**Обновить UserController:**
+- Добавить middleware chain для `/:userId/avatar`
+- Реализовать обработчик `uploadAvatar`
+
+**Цепочка middleware:**
+```typescript
+[
+  ValidateObjectIdMiddleware,
+  DocumentExistsMiddleware,
+  UploadFileMiddleware
+]
+```
+
+#### 7. Cleanup
+
+Удалить дублирующиеся проверки существования из:
+- `offer.controller.ts` (show, update, delete)
+- `comment.controller.ts` (index, create)
+
+Удалить неиспользуемые импорты `HttpError`, `StatusCodes`.
+
+#### 8. Тестирование
+
+**Создать `test.http`** с примерами:
+- Загрузка аватара
+- Тест DocumentExistsMiddleware (404/400)
+- Тест порядка middleware
+- Доступ к статическим файлам
+
+**Запустить тесты:**
+```bash
+# Создать директорию
+mkdir upload
+
+# Запустить сервер
+npm run dev:start
+
+# Тестовые запросы из test.http
+```
+
+### Результат
+
+**Файлы:**
+- ✅ `document-exists.middleware.ts` - универсальная проверка
+- ✅ `upload-file.middleware.ts` - загрузка с multer
+- ✅ `update-user.dto.ts` - DTO для обновления
+- ✅ `test.http` - тестовые запросы
+- ✅ `.env.example` обновлен
+
+**Изменения:**
+- ✅ Middleware применены ко всем контроллерам
+- ✅ Удалено ~50 строк дублирующегося кода
+- ✅ express.static подключен
+- ✅ upload/ и static/ в .gitignore
+
+**Проверка:**
+- ✅ Загрузка файлов работает
+- ✅ Файлы доступны через /static/
+- ✅ 404 при несуществующем документе
+- ✅ 400 при невалидном ID
+- ✅ Правильный порядок middleware
+
+---
 
 ## Структура проекта
 
