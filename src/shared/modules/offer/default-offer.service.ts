@@ -22,19 +22,31 @@ export class DefaultOfferService implements OfferService {
     return result;
   }
 
-  public async find(limit = 60): Promise<DocumentType<OfferEntity>[]> {
-    return this.offerModel
+  public async find(userId?: string, limit = 60): Promise<DocumentType<OfferEntity>[]> {
+    const offers = await this.offerModel
       .find()
       .limit(limit)
       .populate('hostId')
       .exec();
+
+    return offers.map((offer) => {
+      offer.isFavorite = userId ? offer.favorites.includes(userId) : false;
+      return offer;
+    });
   }
 
-  public async findById(offerId: string): Promise<DocumentType<OfferEntity> | null> {
-    return this.offerModel
+  public async findById(offerId: string, userId?: string): Promise<DocumentType<OfferEntity> | null> {
+    const offer = await this.offerModel
       .findById(offerId)
       .populate('hostId')
       .exec();
+
+    if (!offer) {
+      return null;
+    }
+
+    offer.isFavorite = userId ? offer.favorites.includes(userId) : false;
+    return offer;
   }
 
   public async updateById(offerId: string, dto: UpdateOfferDto): Promise<DocumentType<OfferEntity> | null> {

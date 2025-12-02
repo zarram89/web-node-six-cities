@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsDateString, IsEnum, IsInt, IsMongoId, IsNumber, IsObject, IsString, Max, MaxLength, Min, MinLength, ArrayMinSize, ArrayMaxSize, IsIn } from 'class-validator';
+import { IsArray, IsBoolean, IsDateString, IsEnum, IsInt, IsNumber, IsObject, IsString, Max, MaxLength, Min, MinLength, ArrayMinSize, ArrayMaxSize, IsIn } from 'class-validator';
 import { OfferType } from '../../types/offer-type.enum.js';
 import { City } from '../../types/city.type.js';
 import { Location } from '../../types/location.type.js';
@@ -65,7 +65,6 @@ export class CreateOfferDto {
   @IsIn(VALID_AMENITIES, { each: true, message: 'each amenity must be valid' })
   public goods!: Amenity[];
 
-  @IsMongoId({ message: 'hostId must be valid MongoDB ID' })
   public hostId!: string;
 
   @IsObject({ message: 'location must be an object' })

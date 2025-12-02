@@ -11,6 +11,9 @@ export type RestSchema = {
   UPLOAD_DIRECTORY: string;
   STATIC_DIRECTORY_PATH: string;
   HOST: string;
+  JWT_SECRET: string;
+  JWT_ALGORITHM: string;
+  JWT_EXPIRES_IN: string;
 }
 
 export const configRestSchema = convict<RestSchema>({
@@ -73,5 +76,23 @@ export const configRestSchema = convict<RestSchema>({
     format: String,
     env: 'HOST',
     default: 'localhost'
+  },
+  JWT_SECRET: {
+    doc: 'Secret for JWT token signing',
+    format: String,
+    env: 'JWT_SECRET',
+    default: null
+  },
+  JWT_ALGORITHM: {
+    doc: 'Algorithm for JWT token signing',
+    format: String,
+    env: 'JWT_ALGORITHM',
+    default: 'HS256'
+  },
+  JWT_EXPIRES_IN: {
+    doc: 'JWT token expiration time',
+    format: String,
+    env: 'JWT_EXPIRES_IN',
+    default: '1d'
   }
 });
