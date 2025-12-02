@@ -16,6 +16,8 @@ import { DocumentExistsMiddleware } from '../../libs/rest/middleware/document-ex
 import { AuthenticateMiddleware } from '../../libs/rest/middleware/authenticate.middleware.js';
 import { ParseTokenMiddleware } from '../../libs/rest/middleware/parse-token.middleware.js';
 import { TokenService } from '../../libs/auth/token.service.js';
+import { HttpError } from '../../libs/rest/exception-filter/http-error.js';
+import { StatusCodes } from 'http-status-codes';
 
 @injectable()
 export class OfferController extends BaseController {
@@ -48,6 +50,11 @@ export class OfferController extends BaseController {
       method: HttpMethod.Get,
       handler: this.getFavorites,
       middlewares: [new AuthenticateMiddleware(this.tokenService)]
+    });
+    this.addRoute({
+      path: '/premium/:city',
+      method: HttpMethod.Get,
+      handler: this.getPremium
     });
     this.addRoute({
       path: '/:offerId/favorite',
@@ -126,6 +133,17 @@ export class OfferController extends BaseController {
 
   public async update(req: Request, res: Response): Promise<void> {
     const { offerId } = req.params as { offerId: string };
+    const userId = req.user!.userId;
+    const offer = await this.offerService.findById(offerId);
+
+    if (offer?.hostId && (offer.hostId as unknown as { id: string }).id !== userId) {
+      throw new HttpError(
+        StatusCodes.FORBIDDEN,
+        'You are not the owner of this offer',
+        'OfferController'
+      );
+    }
+
     const body = req.body as UpdateOfferDto;
     const updatedOffer = await this.offerService.updateById(offerId, body);
     this.ok(res, fillDTO(OfferDetailRdo, updatedOffer));
@@ -136,8 +154,19 @@ export class OfferController extends BaseController {
     res: Response
   ): Promise<void> {
     const { offerId } = req.params as { offerId: string };
-    const offer = await this.offerService.deleteById(offerId);
-    this.noContent(res, offer);
+    const userId = req.user!.userId;
+    const offer = await this.offerService.findById(offerId);
+
+    if (offer?.hostId && (offer.hostId as unknown as { id: string }).id !== userId) {
+      throw new HttpError(
+        StatusCodes.FORBIDDEN,
+        'You are not the owner of this offer',
+        'OfferController'
+      );
+    }
+
+    await this.offerService.deleteById(offerId);
+    this.noContent(res, null);
   }
 
   public async getFavorites(req: Request, res: Response): Promise<void> {
@@ -158,5 +187,11 @@ export class OfferController extends BaseController {
     const userId = req.user!.userId;
     const result = await this.offerService.removeFromFavorites(offerId, userId);
     this.ok(res, fillDTO(OfferDetailRdo, result));
+  }
+
+  public async getPremium(req: Request, res: Response): Promise<void> {
+    const { city } = req.params as { city: string };
+    const offers = await this.offerService.findPremiumByCity(city);
+    this.ok(res, fillDTO(OfferRdo, offers));
   }
 }

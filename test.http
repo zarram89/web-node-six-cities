@@ -185,3 +185,50 @@ Authorization: Bearer YOUR_TOKEN_HERE
   "rating": 5
 }
 
+
+### ========================================
+### 7. Module 9 Task 1: Finalizing REST API
+### ========================================
+
+### Test CORS (OPTIONS request)
+OPTIONS http://localhost:4000/offers HTTP/1.1
+Origin: http://localhost:3000
+Access-Control-Request-Method: GET
+
+### Logout (Authenticated)
+POST http://localhost:4000/users/logout HTTP/1.1
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### Logout (Unauthenticated - should fail 401)
+POST http://localhost:4000/users/logout HTTP/1.1
+
+### Get Premium Offers
+GET http://localhost:4000/offers/premium/Paris HTTP/1.1
+
+### Update Offer (Owner - should succeed)
+### Replace OFFER_ID with an offer created by the user of YOUR_TOKEN_HERE
+PATCH http://localhost:4000/offers/OFFER_ID HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+{
+  "price": 300
+}
+
+### Update Offer (Not Owner - should fail 403)
+### Replace OFFER_ID with an offer created by ANOTHER user
+PATCH http://localhost:4000/offers/OFFER_ID HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+{
+  "price": 500
+}
+
+### Delete Offer (Owner - should succeed)
+DELETE http://localhost:4000/offers/OFFER_ID HTTP/1.1
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### Delete Offer (Not Owner - should fail 403)
+DELETE http://localhost:4000/offers/OFFER_ID HTTP/1.1
+Authorization: Bearer YOUR_TOKEN_HERE

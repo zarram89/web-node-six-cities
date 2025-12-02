@@ -49,7 +49,12 @@ export class UserController extends BaseController {
       handler: this.checkStatus,
       middlewares: [new AuthenticateMiddleware(this.tokenService)]
     });
-    this.addRoute({ path: '/logout', method: HttpMethod.Post, handler: this.logout });
+    this.addRoute({
+      path: '/logout',
+      method: HttpMethod.Post,
+      handler: this.logout,
+      middlewares: [new AuthenticateMiddleware(this.tokenService)]
+    });
     this.addRoute({
       path: '/:userId/avatar',
       method: HttpMethod.Post,
