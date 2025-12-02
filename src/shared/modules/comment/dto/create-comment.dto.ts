@@ -1,4 +1,4 @@
-import { IsInt, IsMongoId, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
+import { IsInt, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
 
 export class CreateCommentDto {
   @IsString({ message: 'text is required' })
@@ -11,8 +11,7 @@ export class CreateCommentDto {
   @Max(5, { message: 'Max rating is 5' })
   public rating!: number;
 
-  @IsMongoId({ message: 'userId must be valid MongoDB ID' })
   public userId!: string;
 
-  public offerId!: string; // Will be populated from route params
+  public offerId!: string;
 }

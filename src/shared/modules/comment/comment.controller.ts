@@ -12,6 +12,8 @@ import { CreateCommentDto } from './dto/create-comment.dto.js';
 import { ValidateDtoMiddleware } from '../../libs/rest/middleware/validate-dto.middleware.js';
 import { ValidateObjectIdMiddleware } from '../../libs/rest/middleware/validate-objectid.middleware.js';
 import { DocumentExistsMiddleware } from '../../libs/rest/middleware/document-exists.middleware.js';
+import { AuthenticateMiddleware } from '../../libs/rest/middleware/authenticate.middleware.js';
+import { TokenService } from '../../libs/auth/token.service.js';
 
 @injectable()
 export class CommentController extends BaseController {
@@ -19,6 +21,7 @@ export class CommentController extends BaseController {
     @inject(Component.Logger) protected readonly logger: Logger,
     @inject(Component.CommentService) private readonly commentService: CommentService,
     @inject(Component.OfferService) private readonly offerService: OfferService,
+    @inject(Component.TokenService) private readonly tokenService: TokenService,
   ) {
     super(logger);
 
@@ -40,6 +43,7 @@ export class CommentController extends BaseController {
       middlewares: [
         new ValidateObjectIdMiddleware('offerId'),
         new DocumentExistsMiddleware(this.offerService, 'Offer', 'offerId'),
+        new AuthenticateMiddleware(this.tokenService),
         new ValidateDtoMiddleware(CreateCommentDto)
       ]
     });
@@ -53,10 +57,14 @@ export class CommentController extends BaseController {
 
   public async create(req: Request, res: Response): Promise<void> {
     const { offerId } = req.params;
+    const userId = req.user!.userId; // From JWT token
+
     const comment = await this.commentService.create({
       ...req.body,
+      userId,
       offerId
     });
+
     this.created(res, fillDTO(CommentRdo, comment));
   }
 }

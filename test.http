@@ -26,28 +26,6 @@ Content-Type: image/jpeg
 < ./path/to/test-avatar.jpg
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
-### Test: Upload avatar for non-existent user (should return 404)
-POST http://localhost:4000/users/507f1f77bcf86cd799439011/avatar
-Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
-
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="avatar"; filename="avatar.jpg"
-Content-Type: image/jpeg
-
-< ./path/to/test-avatar.jpg
-------WebKitFormBoundary7MA4YWxkTrZu0gW--
-
-### Test: Invalid user ID (should return 400)
-POST http://localhost:4000/users/invalid-id/avatar
-Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
-
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="avatar"; filename="avatar.jpg"
-Content-Type: image/jpeg
-
-< ./path/to/test-avatar.jpg
-------WebKitFormBoundary7MA4YWxkTrZu0gW--
-
 ### Check uploaded avatar (replace FILENAME with actual uploaded filename)
 GET http://localhost:4000/static/FILENAME.jpg
 
@@ -139,3 +117,71 @@ Content-Type: application/json
 ### After uploading an avatar, the file should be accessible at:
 ### GET http://localhost:4000/static/FILENAME.ext
 ### where FILENAME is the value returned by upload endpoint
+
+### ========================================
+### 6. JWT Authorization Tests
+### ========================================
+
+### Login User (Get Token)
+POST http://localhost:4000/users/login HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "test@test.com",
+  "password": "password123"
+}
+
+### Check Status (with token)
+### Replace YOUR_TOKEN_HERE with the token from login response
+GET http://localhost:4000/users/login HTTP/1.1
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### Create Offer (Authenticated)
+POST http://localhost:4000/offers HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+{
+  "title": "Beautiful house in Paris center",
+  "description": "Relax in this calm, stylish space. Very good location.",
+  "postDate": "2024-03-15T12:00:00.000Z",
+  "city": "Paris",
+  "previewImage": "preview.jpg",
+  "images": ["img1.jpg", "img2.jpg", "img3.jpg", "img4.jpg", "img5.jpg", "img6.jpg"],
+  "isPremium": true,
+  "isFavorite": false,
+  "rating": 4.5,
+  "type": "apartment",
+  "bedrooms": 2,
+  "maxAdults": 4,
+  "price": 250,
+  "goods": ["Breakfast", "Air conditioning"],
+  "location": {
+    "latitude": 48.8566,
+    "longitude": 2.3522
+  }
+}
+
+### Add to Favorites
+### Replace OFFER_ID with a real offer ID
+POST http://localhost:4000/offers/OFFER_ID/favorite HTTP/1.1
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### Get Favorites
+GET http://localhost:4000/offers/favorites HTTP/1.1
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### Remove from Favorites
+DELETE http://localhost:4000/offers/OFFER_ID/favorite HTTP/1.1
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### Create Comment (Authenticated)
+POST http://localhost:4000/comments/OFFER_ID HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+{
+  "text": "Amazing place! Highly recommended.",
+  "rating": 5
+}
+

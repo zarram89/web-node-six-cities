@@ -333,6 +333,45 @@ npm run dev:start
 
 ---
 
+## Модуль 8. Задание 1: Авторизация (JWT)
+
+### Конфигурация
+
+В `.env` файле должны быть заданы следующие переменные:
+```env
+JWT_SECRET=secret-key
+JWT_ALGORITHM=HS256
+JWT_EXPIRES_IN=2d
+```
+
+### Использование API с авторизацией
+
+Для доступа к защищенным маршрутам необходимо передавать токен в заголовке `Authorization`:
+
+```
+Authorization: Bearer <token>
+```
+
+**Получение токена:**
+Токен возвращается при успешном входе (`POST /users/login`) или регистрации (если реализовано).
+
+**Пример запроса с curl:**
+```bash
+curl -X POST http://localhost:4000/offers \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR..." \
+  -H "Content-Type: application/json" \
+  -d '{"title": "New Offer", ...}'
+```
+
+### Избранное
+
+Управление избранным доступно только авторизованным пользователям:
+- `GET /offers/favorites` - получить список избранного
+- `POST /offers/:offerId/favorite` - добавить в избранное
+- `DELETE /offers/:offerId/favorite` - удалить из избранного
+
+---
+
 ## Структура проекта
 
 ### Директория `src`

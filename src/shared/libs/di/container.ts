@@ -10,6 +10,7 @@ import { DatabaseClient } from '../database-client/database-client.interface.js'
 import { MongoDatabaseClient } from '../database-client/mongo.database-client.js';
 import { ExceptionFilter } from '../../libs/rest/exception-filter/exception-filter.interface.js';
 import { AppExceptionFilter } from '../../libs/rest/exception-filter/app-exception-filter.js';
+import { TokenService } from '../auth/token.service.js';
 import { createUserContainer } from '../../modules/user/user.container.js';
 import { createOfferContainer } from '../../modules/offer/offer.container.js';
 import { createCommentContainer } from '../../modules/comment/comment.container.js';
@@ -22,6 +23,15 @@ export function createRestApplicationContainer() {
   restApplicationContainer.bind<Config<RestSchema>>(Component.Config).to(RestConfig).inSingletonScope();
   restApplicationContainer.bind<DatabaseClient>(Component.DatabaseClient).to(MongoDatabaseClient).inSingletonScope();
   restApplicationContainer.bind<ExceptionFilter>(Component.ExceptionFilter).to(AppExceptionFilter).inSingletonScope();
+
+  restApplicationContainer.bind<TokenService>(Component.TokenService).toDynamicValue((context) => {
+    const config = context.container.get<Config<RestSchema>>(Component.Config);
+    return new TokenService(
+      config.get('JWT_SECRET'),
+      config.get('JWT_ALGORITHM'),
+      config.get('JWT_EXPIRES_IN')
+    );
+  }).inSingletonScope();
 
   restApplicationContainer.load(createUserContainer());
   restApplicationContainer.load(createOfferContainer());

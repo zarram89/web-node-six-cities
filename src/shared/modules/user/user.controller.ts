@@ -17,6 +17,8 @@ import { ValidateDtoMiddleware } from '../../libs/rest/middleware/validate-dto.m
 import { ValidateObjectIdMiddleware } from '../../libs/rest/middleware/validate-objectid.middleware.js';
 import { DocumentExistsMiddleware } from '../../libs/rest/middleware/document-exists.middleware.js';
 import { UploadFileMiddleware } from '../../libs/rest/middleware/upload-file.middleware.js';
+import { AuthenticateMiddleware } from '../../libs/rest/middleware/authenticate.middleware.js';
+import { TokenService } from '../../libs/auth/token.service.js';
 
 @injectable()
 export class UserController extends BaseController {
@@ -24,6 +26,7 @@ export class UserController extends BaseController {
     @inject(Component.Logger) protected readonly logger: Logger,
     @inject(Component.UserService) private readonly userService: UserService,
     @inject(Component.Config) private readonly configService: Config<RestSchema>,
+    @inject(Component.TokenService) private readonly tokenService: TokenService,
   ) {
     super(logger);
     this.logger.info('Register routes for UserController...');
@@ -40,7 +43,13 @@ export class UserController extends BaseController {
       handler: this.login,
       middlewares: [new ValidateDtoMiddleware(LoginUserDto)]
     });
-    this.addRoute({ path: '/login', method: HttpMethod.Get, handler: this.checkStatus });
+    this.addRoute({
+      path: '/login',
+      method: HttpMethod.Get,
+      handler: this.checkStatus,
+      middlewares: [new AuthenticateMiddleware(this.tokenService)]
+    });
+    this.addRoute({ path: '/logout', method: HttpMethod.Post, handler: this.logout });
     this.addRoute({
       path: '/:userId/avatar',
       method: HttpMethod.Post,
@@ -73,41 +82,58 @@ export class UserController extends BaseController {
 
   public async login(
     { body }: Request<Record<string, unknown>, Record<string, unknown>, LoginUserDto>,
-    _res: Response,
+    res: Response,
   ): Promise<void> {
-    const existsUser = await this.userService.findByEmail(body.email);
+    const user = await this.userService.findByEmail(body.email);
 
-    if (!existsUser) {
+    if (!user) {
       throw new HttpError(
         StatusCodes.UNAUTHORIZED,
-        `User with email ${body.email} not found.`,
+        'Invalid email or password',
         'UserController',
       );
     }
 
-    throw new HttpError(
-      StatusCodes.NOT_IMPLEMENTED,
-      'Not implemented',
-      'UserController',
-    );
-  }
+    const passwordValid = user.verifyPassword(body.password, this.configService.get('SALT'));
 
-  public async checkStatus(
-    req: Request,
-    _res: Response
-  ): Promise<void> {
-    if (!req.body.token) {
+    if (!passwordValid) {
       throw new HttpError(
         StatusCodes.UNAUTHORIZED,
-        'Unauthorized',
+        'Invalid email or password',
+        'UserController',
+      );
+    }
+
+    const token = await this.tokenService.sign({
+      userId: user.id,
+      email: user.email
+    });
+
+    this.ok(res, {
+      ...fillDTO(UserRdo, user),
+      token
+    });
+  }
+
+  public async checkStatus(req: Request, res: Response): Promise<void> {
+    const userId = req.user!.userId;
+    const user = await this.userService.findById(userId);
+
+    if (!user) {
+      throw new HttpError(
+        StatusCodes.UNAUTHORIZED,
+        'User not found',
         'UserController'
       );
     }
-    throw new HttpError(
-      StatusCodes.NOT_IMPLEMENTED,
-      'Not implemented',
-      'UserController',
-    );
+
+    this.ok(res, fillDTO(UserRdo, user));
+  }
+
+  public async logout(_req: Request, res: Response): Promise<void> {
+    // For JWT, logout happens on client side by removing the token
+    // Token will expire based on JWT_EXPIRES_IN configuration
+    this.noContent(res, { message: 'Logged out successfully' });
   }
 
   public async uploadAvatar(req: Request, res: Response): Promise<void> {
